@@ -1,0 +1,7 @@
+---
+# handlers file for roles/dnsmasq
+
+- name: restart dnsmasq
+  systemd:
+    name: dnsmasq
+    state: restarted

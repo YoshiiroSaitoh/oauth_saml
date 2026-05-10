@@ -1,0 +1,13 @@
+services:
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2
+
+    network_mode: host
+
+    command:
+      - start-dev
+
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
