@@ -1,24 +1,54 @@
 ---
 # tasks file for roles/dnsmasq
 
-- name: install dnsmasq
+- name: install required packages
   apt:
-    name: dnsmasq
+    name:
+      - curl
+      - dnsutils
+      - sqlite3
     state: present
     update_cache: true
 
-- name: deploy dnsmasq config
+- name: check pihole installed
+  stat:
+    path: /etc/pihole
+  register: pihole_dir
+
+- name: download Pi-hole installer
+  get_url:
+    url: https://install.pi-hole.net
+    dest: /tmp/basic-install.sh
+    mode: '0755'
+  when: not pihole_dir.stat.exists
+
+- name: show Pi-hole install command
+  debug:
+    msg: |
+      Run manually:
+
+      sudo bash /tmp/basic-install.sh
+  when: not pihole_dir.stat.exists
+
+- name: stop standalone dnsmasq
+  systemd:
+    name: dnsmasq
+    enabled: false
+    state: stopped
+  ignore_errors: true
+
+- name: deploy custom dnsmasq config for Pi-hole
   template:
     src: dnsmasq.conf.j2
-    dest: /etc/dnsmasq.d/dev.conf
+    dest: /etc/dnsmasq.d/99-dev.conf
     owner: root
     group: root
     mode: '0644'
   notify:
-    - restart dnsmasq
+    - restart pihole-FTL
 
-- name: enable dnsmasq
+- name: ensure pihole-FTL enabled
   systemd:
-    name: dnsmasq
+    name: pihole-FTL
     enabled: true
     state: started
