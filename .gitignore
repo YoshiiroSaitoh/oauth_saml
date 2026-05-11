@@ -1,3 +1,4 @@
 .env
 dns/resources/*rsa
 **/.env
+**/target
