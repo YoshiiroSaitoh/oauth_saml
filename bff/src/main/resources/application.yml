@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  security:
+    oauth2:
+      client:
+
+        registration:
+          keycloak:
+            client-id: bff-client
+            client-secret: g5qImZn966H8jmOx7ZJh8aMuGSnRvSCg
+            scope:
+              - openid
+              - profile
+              - email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+        provider:
+          keycloak:
+            issuer-uri: http://auth.test:8080/realms/oauth
+
+logging:
+  level:
+    org.springframework.security: TRACE
+    org.springframework.web: DEBUG

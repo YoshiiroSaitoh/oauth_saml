@@ -1,0 +1,12 @@
+package com.example.bffdemo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class BffDemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BffDemoApplication.class, args);
+    }
+}

@@ -1,0 +1,125 @@
+@startuml
+title Spring Security OAuth2 Login (BFF + Keycloak)
+
+actor Browser
+participant "BFF\n(Spring Boot + Spring Security)" as BFF
+participant "Keycloak\n(IdP)" as KC
+
+== Initial Access ==
+
+Browser -> BFF : GET /
+activate BFF
+
+note right of BFF
+AuthorizationFilter
+↓
+anonymous user
+↓
+AccessDeniedException
+end note
+
+note right of BFF
+ExceptionTranslationFilter
+saves request in session
+end note
+
+BFF --> Browser : 302 Redirect\n/oauth2/authorization/keycloak
+deactivate BFF
+
+== OAuth Authorization Request ==
+
+Browser -> BFF : GET /oauth2/authorization/keycloak
+activate BFF
+
+note right of BFF
+OAuth2AuthorizationRequestRedirectFilter
+creates:
+- state
+- nonce
+- redirect_uri
+end note
+
+BFF --> Browser : 302 Redirect to Keycloak\n/auth?...&state=...&nonce=...
+deactivate BFF
+
+== User Login ==
+
+Browser -> KC : GET /auth
+activate KC
+
+KC --> Browser : Login Page
+
+Browser -> KC : POST credentials
+
+note right of KC
+User authentication
+end note
+
+KC --> Browser : 302 Redirect\n/login/oauth2/code/keycloak?code=...&state=...
+deactivate KC
+
+== OAuth Callback ==
+
+Browser -> BFF : GET /login/oauth2/code/keycloak\n?code=...&state=...
+activate BFF
+
+note right of BFF
+OAuth2LoginAuthenticationFilter
+validates:
+- state
+- authorization response
+end note
+
+== Token Exchange ==
+
+BFF -> KC : POST /token\n(code → access token)
+activate KC
+
+KC --> BFF : access_token\nid_token\nrefresh_token
+deactivate KC
+
+== OIDC Validation ==
+
+BFF -> KC : GET /certs
+activate KC
+KC --> BFF : JWK Set
+deactivate KC
+
+note right of BFF
+Validate ID Token signature
+and nonce
+end note
+
+== UserInfo ==
+
+BFF -> KC : GET /userinfo
+activate KC
+
+KC --> BFF : user claims
+deactivate KC
+
+== Session Login ==
+
+note right of BFF
+Create Authentication
+Store SecurityContext
+Rotate Session ID
+end note
+
+BFF --> Browser : Set-Cookie: JSESSIONID\n302 Redirect /
+deactivate BFF
+
+== Authenticated Access ==
+
+Browser -> BFF : GET /
+activate BFF
+
+note right of BFF
+SecurityContext restored
+from session
+end note
+
+BFF --> Browser : 200 OK\nUser JSON / HTML
+deactivate BFF
+
+@enduml
